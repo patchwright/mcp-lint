@@ -7,9 +7,11 @@ import dataclasses
 import fnmatch
 import json
 import sys
+from collections.abc import Collection, Iterator
 from pathlib import Path
 
 from .checkers import CHECKERS, Finding, check_payload
+from .source_checkers import SOURCE_CHECKERS, check_source
 
 # Junk directories never worth scanning when walking a tree. Matched against
 # path *components below the walked root* (so `mcp-lint .venv` still honours an
@@ -43,7 +45,7 @@ def _is_excluded(
     path: Path,
     *,
     no_default_exclude: bool,
-    extra_excludes,
+    extra_excludes: Collection[str],
     skip_first: int = 0,
 ) -> bool:
     """Should a rglob-discovered ``path`` be skipped? Mirrors wildlint's contract."""
@@ -63,35 +65,49 @@ def _is_excluded(
     return False
 
 
-def _iter_json_files(paths, *, no_default_exclude=False, extra_excludes=()):
-    """Yield ``.json`` files to lint. Explicit file args are scanned as-is;
-    directory args are walked with default/config excludes applied to
-    descendants. (A future surface -- .py / .ts source -- will add sibling
-    iterators; v0.1 ships JSON config only.)"""
+_LINT_SUFFIXES = (".json", ".py")
+
+
+def _iter_targets(
+    paths: Collection[str],
+    *,
+    no_default_exclude: bool = False,
+    extra_excludes: Collection[str] = (),
+) -> Iterator[Path]:
+    """Yield lintable files. Explicit file args are scanned as-is; directory
+    args are walked with default/config excludes applied to descendants.
+
+    v0.1 shipped JSON config only. v0.2 adds ``.py`` for the MC002 source-level
+    rule (CVE-2026-30623); ast-grep multi-language pack is the template for the
+    JS/TS arm (CVE-2025-6514 / mcp-remote), still deferred.
+    """
     for raw in paths:
         root = Path(raw)
         if root.is_dir():
             skip = len(root.parts)
-            for f in sorted(root.rglob("*.json")):
-                if not _is_excluded(
-                    f,
-                    no_default_exclude=no_default_exclude,
-                    extra_excludes=extra_excludes,
-                    skip_first=skip,
-                ):
-                    yield f
-        elif root.is_file() and root.suffix == ".json":
+            for pat in ("*.json", "*.py"):
+                for f in sorted(root.rglob(pat)):
+                    if not _is_excluded(
+                        f,
+                        no_default_exclude=no_default_exclude,
+                        extra_excludes=extra_excludes,
+                        skip_first=skip,
+                    ):
+                        yield f
+        elif root.is_file() and root.suffix in _LINT_SUFFIXES:
             yield root
 
 
 def check_file(
     path: Path, *, pedantic: bool = False, codes: set[str] | None = None
 ) -> tuple[list[Finding], list[str]]:
-    """Return ``(findings, errors)`` for one JSON file.
+    """Return ``(findings, errors)`` for one file.
 
-    Findings are CVE-pinned diagnostic strings. Errors are parse/decode failures
-    -- they are *not* findings and surface on stderr in text mode (exit 2 when
-    no findings accompany them).
+    Dispatches on suffix: ``.json`` -> JSON config checkers (MC001 et al.);
+    ``.py`` -> Python source checkers (MC002 et al.). Findings are CVE-pinned
+    diagnostic strings. Errors are parse/decode failures -- they are *not*
+    findings and surface on stderr in text mode (exit 2 when no findings
+    accompany them).
     """
     errors: list[str] = []
     try:
@@ -100,6 +116,10 @@ def check_file(
         return [], [f"{path}: error: not valid UTF-8, skipped"]
     except OSError as exc:
         return [], [f"{path}: error: {exc.strerror or exc}"]
+
+    if path.suffix == ".py":
+        findings = check_source(source, str(path), codes=codes)
+        return findings, errors
 
     try:
         payload = json.loads(source)
@@ -116,11 +136,12 @@ def check_file(
 def _build_parser() -> argparse.ArgumentParser:
     from . import __version__
 
-    rules = ", ".join(f"{c.code} ({c.name}, {c.tier})" for c in CHECKERS)
+    all_rules = list(CHECKERS) + list(SOURCE_CHECKERS)
+    rules = ", ".join(f"{c.code} ({c.name}, {c.tier})" for c in all_rules)
     parser = argparse.ArgumentParser(
         prog="mcp-lint",
-        description="Static checks for MCP server configs. Every rule is pinned "
-        f"to a real CVE/GHSA. Rules: {rules}.",
+        description="Static checks for MCP configs and server source. Every rule "
+        "is pinned to a real CVE/GHSA. Rules: " + rules + ".",
     )
     parser.add_argument(
         "paths", nargs="*", default=["."], help="files or dirs (default: .)"
@@ -183,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
             valid_paths.append(raw)
         else:
             errors.append(f"{raw}: error: no such file or directory")
-    for file in _iter_json_files(
+    for file in _iter_targets(
         valid_paths,
         no_default_exclude=args.no_default_exclude,
         extra_excludes=tuple(extra_excludes),

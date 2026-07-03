@@ -94,7 +94,10 @@ def test_mc001_silent_on_stdio_entry():
     # stdio transport (no url) is not the network surface of CVE-2025-49596.
     cfg = {
         "mcpServers": {
-            "local": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-everything"]}
+            "local": {
+                "command": "npx",
+                "args": ["-y", "@modelcontextprotocol/server-everything"],
+            }
         }
     }
     assert _codes(cfg) == []

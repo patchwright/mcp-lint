@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-lint"
-version = "0.1.0"
+version = "0.2.0"
 description = "Static linter for MCP (Model Context Protocol) server configs. Every rule is pinned to a real MCP CVE/GHSA with a biting fixture."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -35,3 +35,40 @@ mcp-lint = "mcp_lint.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+extend-exclude = ["tests/fixtures"]
+
+[tool.ruff.lint]
+# Mirror wildlint's discipline: catch real bugs, unused code, and obvious
+# style drift without turning the linter into a style cop. B (bugbear),
+# C4 (comprehensions), E/W (pycodestyle), F (pyflakes), I (isort), UP
+# (pyupgrade) -- conservative, well-understood rules.
+select = ["B", "C4", "E", "F", "I", "UP", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use lowercase function names for test_ readability and may star-import
+# helpers; fixtures intentionally contain "vulnerable" code shapes that the
+# linter would otherwise flag.
+"tests/**/*.py" = ["E501"]
+
+[tool.ruff.format]
+docstring-code-format = false
+
+[tool.mypy]
+python_version = "3.9"
+# mcp-lint ships with zero runtime deps; the package surface is small enough
+# to hold to strict. Tests are intentionally untyped (mypy runs on src/ only).
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+files = ["src/mcp_lint"]
+
+[[tool.mypy.overrides]]
+# ast / re / urllib.parse are all stdlib and ship stubs; no third-party
+# overrides needed. This block exists so a future optional dep (e.g. ast-grep
+# for the JS/TS arm) has an obvious place to declare its overrides.
+module = "mcp_lint.*"
+disallow_untyped_defs = true

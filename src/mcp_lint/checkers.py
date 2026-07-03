@@ -98,9 +98,7 @@ class UnauthNetworkServer:
     name = "unauth-network-server"
     tier = DEFAULT
 
-    _AUTH_HEADERS = frozenset(
-        {"authorization", "x-api-key", "x-auth-token", "cookie"}
-    )
+    _AUTH_HEADERS = frozenset({"authorization", "x-api-key", "x-auth-token", "cookie"})
     _AUTH_ENTRY_KEYS = frozenset({"authorization", "apikey", "api_key", "token"})
 
     def _has_auth(self, entry: dict[str, Any]) -> bool:
@@ -147,7 +145,8 @@ class UnauthNetworkServer:
                     f"non-loopback host ({host}) with no authentication header; "
                     "this is the documented shape of CVE-2025-49596 (MCP Inspector "
                     "unauthenticated RCE, fixed in 0.14.1 by adding client<->proxy "
-                    "auth). Bind to loopback or add a credential (headers.Authorization). "
+                    "auth). Bind to loopback or add a credential "
+                    "(headers.Authorization). "
                     "Advisories: "
                     "https://nvd.nist.gov/vuln/detail/CVE-2025-49596 ; "
                     "https://www.oligo.security/blog/critical-rce-vulnerability-in-anthropic-mcp-inspector-cve-2025-49596",
@@ -161,7 +160,9 @@ CHECKERS = [
 ]
 
 
-def select_checkers(*, pedantic: bool = False, codes: set[str] | None = None) -> list:
+def select_checkers(
+    *, pedantic: bool = False, codes: set[str] | None = None
+) -> list[Any]:
     """Return the active checkers.
 
     ``pedantic`` includes the opt-in tier. ``codes`` (e.g. ``{"MC001"}``)
@@ -188,36 +189,57 @@ def check_payload(
     return findings
 
 
-# Bug classes pinned to a real CVE but NOT shipped in v0.1 -- the surface is
-# real but the static detector needs more design work (corpus, false-positive
-# measurement) before it can graduate. Kept here so the CVE provenance is not
-# lost and a future rule can pick it up.
+# Bug classes pinned to a real CVE but NOT yet shipped. The v0.2 Python-source
+# surface (MC002) is landed; the entries below remain deferred until their
+# detector design and false-positive measurement land. Kept here so the CVE
+# provenance is not lost -- and so the reasoning that holds each one is
+# auditable rather than silent.
 DEFERRED = {
-    "mc001-loopback-no-auth": (
-        "Same CVE (CVE-2025-49596), the loopback-and-no-auth half. The 0.14.1 "
-        "fix ships auth inside the Inspector binary precisely because loopback "
-        "alone did not protect against DNS-rebinding / browser-origin confusion. "
-        "A PEDANTIC rule flagging a loopback url with no credential would catch "
-        "that residual class but needs a corpus pass to size the false-positive "
-        "rate against legitimate local-only dev configs."
+    "mc001-loopback-no-auth-residual": (
+        "Same CVE as MC001 (CVE-2025-49596), the loopback-and-no-auth half. "
+        "HELD, with reasoning: the 0.14.1 fix ships auth inside the Inspector "
+        "binary precisely because loopback alone did not protect against DNS-"
+        "rebinding / browser-origin confusion. But that residual risk is a "
+        "property of the server BINARY (Inspector <0.14.1), not of the JSON "
+        "config -- a config-level rule cannot distinguish 'Inspector <0.14.1 on "
+        "127.0.0.1' from 'any other innocent local dev server on 127.0.0.1', "
+        "and the latter is the canonical MCP quickstart shape (every "
+        "getting-started guide starts a server on 127.0.0.1 with no auth). "
+        "Sizing via the v0.2 corpus does not help either: the corpus is MCP "
+        "server LIBRARIES (pip packages), which ship no consumer .mcp.json, so "
+        "BOTH arms of MC001 read 0 on it. A PEDANTIC rule here would flood "
+        "every first-run developer with no way to tell the dangerous case "
+        "apart at config level. Held until mcp-lint can correlate the JSON "
+        "entry with the named server binary's version (out of scope for a "
+        "config/source linter), at which point a PEDANTIC tier becomes a "
+        "precise opt-in rather than a firehose."
     ),
-    "mc002-mcp-remote-command-injection": (
-        "CVE-2025-6514 (mcp-remote command injection) -- the mcp-remote client "
-        "built shell arguments from URL query params. Surface lives in JS/TS "
-        "source (the client), not JSON config; deferred until mcp-lint grows a "
-        "TS/JS AST surface (the wildlint ast-grep multi-language pack is the "
-        "template). Advisory: https://nvd.nist.gov/vuln/detail/CVE-2025-6514"
+    "cve-2025-6514-mcp-remote-shell-injection": (
+        "CVE-2025-6514 (mcp-remote OS command injection) -- the mcp-remote "
+        "CLIENT passed the OAuth `authorization_endpoint` URL into a shell "
+        "command (open / xdg-open via string concatenation); a malicious MCP "
+        "server could inject metacharacters for RCE. Verified in NVD and the "
+        "JFrog disclosure. Surface is JS/TS source (the mcp-remote npm "
+        "package), not Python and not JSON config; deferred until mcp-lint "
+        "grows a TS/JS AST surface (the wildlint ast-grep multi-language pack "
+        "is the template). The fix uses execFile/argument arrays instead of a "
+        "shell string. Advisories: "
+        "https://nvd.nist.gov/vuln/detail/CVE-2025-6514 ; "
+        "https://jfrog.com/blog/2025-6514-critical-mcp-remote-rce-vulnerability/"
     ),
-    "mc003-litellm-rce": (
-        "CVE-2026-30623 (LiteLLM RCE via the model-list parser) -- surface is "
-        "Python source calling eval/exec on untrusted model metadata. Deferred "
-        "until the Python-source surface lands; rule would flag eval/exec on "
-        "data traced to the model-list endpoint."
-    ),
-    "mc004-fastmcp-confused-deputy": (
-        "GHSA-rww4-4w9c-7733 (FastMCP confused deputy) -- the server relayed "
-        "tool calls across tenants using only the tool name, letting one caller "
-        "invoke another tenant's tool. Surface is FastMCP server source (Python); "
-        "deferred until the Python-source surface lands."
+    "cve-2026-27124-fastmcp-oauth-consent": (
+        "GHSA-rww4-4w9c-7733 / CVE-2026-27124 (FastMCP OAuthProxy confused "
+        "deputy) -- the OAuth proxy callback did NOT verify the user's consent "
+        "before completing the authorization-code exchange, enabling a confused "
+        "deputy (a malicious authorization server could complete a flow without "
+        "genuine consent). Verified in NVD and the FastMCP advisory. Fixed in "
+        "FastMCP 3.2.0 by enforcing consent verification in the callback. The "
+        "surface is Python source (FastMCP's OAuth proxy handler), and the "
+        "documented signature is a MISSING consent-state check before issuing "
+        "tokens -- a control-flow omission rather than a syntactic sink, which "
+        "is harder to catch with a low-FP AST rule. Deferred until a "
+        "control-flow-sensitive detector design lands. Advisory: "
+        "https://github.com/PrefectHQ/fastmcp/security/advisories/GHSA-rww4-4w9c-7733 ; "  # noqa: E501
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-27124"
     ),
 }

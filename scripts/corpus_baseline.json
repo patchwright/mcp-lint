@@ -1,0 +1,27 @@
+{
+  "_comment": "Expected mcp-lint finding counts over a pinned real-world MCP-package corpus. scripts/corpus_diff.py compares live counts to this; a drift fails the pre-release gate (RELEASING.md) so a false-positive explosion or a guard-detection regression is caught before tagging, not by external red-teaming. The corpus covers the three layers named in the OX Security MCP-stdio advisory: root/SDK (mcp), framework (fastmcp), and adapter (langchain-mcp-adapters). The two MC002 findings in fastmcp/langchain_mcp_adapters are TRUE-POSITIVES-AT-THE-SINK: each constructs StdioServerParameters(command=<param>) with no allowlist in scope, which is exactly the CVE-2026-30623 shape. Both packages are transport/framework layers (OX lists them under 'won't patch -- caller's responsibility'), so the finding is real but the responsibility is delegated; the count is stable and the gate's job is to catch a checker change that moves it, not to judge the framework's design. Update with `corpus_diff.py --update` ONLY after confirming a count change is intended, and record why.",
+  "_pinned": {
+    "mcp": "1.28.1",
+    "fastmcp": "3.4.2",
+    "langchain-mcp-adapters": "0.3.0"
+  },
+  "_scanned_at_version": "0.2.0",
+  "_rules": {
+    "MC001": "unauth-network-server (JSON config, CVE-2025-49596). Reads 0 on this corpus by construction: Python packages ship no consumer .mcp.json. Tracked so a future JSON test corpus lands honestly.",
+    "MC002": "unsanitized-stdio-command (Python source, CVE-2026-30623). The reason this corpus exists."
+  },
+  "counts": {
+    "mcp": {
+      "MC001": 0,
+      "MC002": 0
+    },
+    "fastmcp": {
+      "MC001": 0,
+      "MC002": 1
+    },
+    "langchain_mcp_adapters": {
+      "MC001": 0,
+      "MC002": 1
+    }
+  }
+}

@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e . pytest
+      - name: Tests
+        run: python -m pytest -q
+      - name: Smoke (python -m)
+        run: python -m mcp_lint --version
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install ruff (pinned)
+        run: pip install ruff==0.6.9
+      - name: ruff check
+        run: ruff check src tests
+      - name: ruff format
+        run: ruff format --check src tests
+
+  type:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install mypy (pinned)
+        run: pip install mypy==1.13.0
+      - name: mypy
+        # type-checks the package source only; tests are intentionally untyped.
+        run: mypy src/mcp_lint
+
+  corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        run: pip install uv
+      - name: Install package
+        run: pip install -e .
+      - name: Corpus gate (drift vs baseline)
+        # Verifies MC001/MC002 finding counts over a pinned mcp/fastmcp/
+        # langchain-mcp-adapters corpus match scripts/corpus_baseline.json.
+        # A checker change that drifts the counts fails here. See RELEASING.md.
+        run: uv run python scripts/corpus_diff.py

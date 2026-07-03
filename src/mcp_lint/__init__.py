@@ -11,13 +11,16 @@ from __future__ import annotations
 
 from .checkers import CHECKERS, Finding, check_payload
 from .cli import main
+from .source_checkers import SOURCE_CHECKERS, check_source
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "CHECKERS",
+    "SOURCE_CHECKERS",
     "Finding",
     "check_payload",
+    "check_source",
     "main",
     "__version__",
 ]
