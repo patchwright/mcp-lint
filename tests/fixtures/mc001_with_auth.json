@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "inspector": {
+      "url": "http://0.0.0.0:6277/sse",
+      "headers": {
+        "Authorization": "Bearer mcp_inspector_token_replace_me"
+      }
+    }
+  }
+}

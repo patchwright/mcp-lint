@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "inspector": {
+      "url": "http://127.0.0.1:6277/sse"
+    }
+  }
+}

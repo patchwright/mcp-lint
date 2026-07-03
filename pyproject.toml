@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-lint"
+version = "0.1.0"
+description = "Static linter for MCP (Model Context Protocol) server configs. Every rule is pinned to a real MCP CVE/GHSA with a biting fixture."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+license = { text = "MIT" }
+keywords = ["mcp", "model-context-protocol", "lint", "security", "cve", "static-analysis", "claude", "inspector", "ai-safety"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/patchwright/mcp-lint"
+Issues = "https://github.com/patchwright/mcp-lint/issues"
+
+[project.scripts]
+mcp-lint = "mcp_lint.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
