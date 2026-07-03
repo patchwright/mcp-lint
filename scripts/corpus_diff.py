@@ -17,8 +17,8 @@ releasing a new version would drift the counts and mask a real checker change,
 so every package is pinned.
 
 Usage (from the mcp-lint repo root):
-    uv run python scripts/corpus_diff.py            # compare to baseline; exit 1 on drift
-    uv run python scripts/corpus_diff.py --update    # rewrite baseline with current counts
+    uv run python scripts/corpus_diff.py         # compare; exit 1 on drift
+    uv run python scripts/corpus_diff.py --update  # rewrite baseline
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ def _count(imp: str, site_packages: Path) -> dict[str, int]:
             f"  ! could not parse JSON for {imp} (mcp-lint stdout: {r.stdout[:200]!r})",
             file=sys.stderr,
         )
-        return {rule: -1 for rule in RULES}
+        return dict.fromkeys(RULES, -1)
     return {rule: sum(1 for f in findings if f.get("code") == rule) for rule in RULES}
 
 
