@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mcp-lint"
+name = "mcp-cve-lint"
 version = "0.2.0"
 description = "Static linter for MCP (Model Context Protocol) server configs. Every rule is pinned to a real MCP CVE/GHSA with a biting fixture."
 readme = "README.md"
@@ -31,7 +31,7 @@ Homepage = "https://github.com/patchwright/mcp-lint"
 Issues = "https://github.com/patchwright/mcp-lint/issues"
 
 [project.scripts]
-mcp-lint = "mcp_lint.cli:main"
+mcp-cve-lint = "mcp_lint.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -25,8 +25,8 @@ no exceptions for vibes. A gate with substance, not caution dressed as a rule.
       signatures). Recorded in the rule's docstring + the finding message +
       the README row.
 - [ ] **build-honesty gate**: the checker goes RED on the vulnerable fixture
-      and GREEN on the fixed fixture — `mcp-lint tests/fixtures/<rule>_vulnerable.*`
-      exits 1, `mcp-lint tests/fixtures/<rule>_fixed.*` exits 0. Mirrors wildlint.
+      and GREEN on the fixed fixture — `mcp-cve-lint tests/fixtures/<rule>_vulnerable.*`
+      exits 1, `mcp-cve-lint tests/fixtures/<rule>_fixed.*` exits 0. Mirrors wildlint.
 - [ ] version bumped in `src/mcp_lint/__init__.py` **and** `pyproject.toml`
       (semver: new rule/surface = minor; internal fix = patch)
 - [ ] new public symbols exported from `src/mcp_lint/__init__.py` (`__all__`)
@@ -90,9 +90,9 @@ Release) — there is no CHANGELOG file by project convention.
 
 ## Post-publish smoke (runs AFTER publish — the closing item)
 
-- [ ] fresh install in a clean venv: `pip install mcp-lint==X.Y.Z`
-- [ ] `mcp-lint --version` reports the new version
-- [ ] the new rule fires: `mcp-lint tests/fixtures/<rule>_vulnerable.*` exits 1
+- [ ] fresh install in a clean venv: `pip install mcp-cve-lint==X.Y.Z`
+- [ ] `mcp-cve-lint --version` reports the new version
+- [ ] the new rule fires: `mcp-cve-lint tests/fixtures/<rule>_vulnerable.*` exits 1
 - [ ] `python -c "import mcp_lint; print(mcp_lint.__version__, [c.code for c in mcp_lint.CHECKERS + mcp_lint.SOURCE_CHECKERS])"`
 
 ## What this gate is not

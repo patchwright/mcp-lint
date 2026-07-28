@@ -56,7 +56,7 @@ def _count(imp: str, site_packages: Path) -> dict[str, int]:
     MC001 -- the corpus is Python packages, so MC001 reads 0 by construction,
     but tracking it keeps the gate honest if a JSON test corpus is added."""
     src = site_packages / imp
-    r = _run(["uv", "run", "mcp-lint", "--format", "json", str(src)])
+    r = _run(["uv", "run", "mcp-cve-lint", "--format", "json", str(src)])
     try:
         findings = json.loads(r.stdout).get("findings", [])
     except json.JSONDecodeError:

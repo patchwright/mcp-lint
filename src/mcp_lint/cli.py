@@ -139,7 +139,7 @@ def _build_parser() -> argparse.ArgumentParser:
     all_rules = list(CHECKERS) + list(SOURCE_CHECKERS)
     rules = ", ".join(f"{c.code} ({c.name}, {c.tier})" for c in all_rules)
     parser = argparse.ArgumentParser(
-        prog="mcp-lint",
+        prog="mcp-cve-lint",
         description="Static checks for MCP configs and server source. Every rule "
         "is pinned to a real CVE/GHSA. Rules: " + rules + ".",
     )

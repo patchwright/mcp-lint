@@ -1,5 +1,8 @@
 # mcp-lint
 
+*Published on PyPI/CLI as **`mcp-cve-lint`** — the name `mcp-lint` was already
+taken by an unrelated package. The GitHub repo keeps its original name.*
+
 A static linter for **MCP (Model Context Protocol) server configs and source**
 where every rule is pinned to a real, public MCP CVE or GHSA. Each finding
 message carries the CVE id and an advisory URL so a reviewer can verify the
@@ -20,18 +23,18 @@ See [Honesty note](#honesty-note) below.
 ## Install
 
 ```bash
-uv tool install .          # or: pip install -e .
-mcp-lint --version
+pip install mcp-cve-lint   # or, from a clone: uv tool install . / pip install -e .
+mcp-cve-lint --version
 ```
 
 ## Use
 
 ```bash
-mcp-lint .mcp.json                  # lint one JSON config (MC001)
-mcp-lint server.py                  # lint one Python source file (MC002)
-mcp-lint .                          # walk a tree for *.json + *.py
-mcp-lint --format json .            # machine-readable
-mcp-lint --select MC002 src/        # run one rule
+mcp-cve-lint .mcp.json                  # lint one JSON config (MC001)
+mcp-cve-lint server.py                  # lint one Python source file (MC002)
+mcp-cve-lint .                          # walk a tree for *.json + *.py
+mcp-cve-lint --format json .            # machine-readable
+mcp-cve-lint --select MC002 src/        # run one rule
 ```
 
 Exit codes are ruff-compatible: **0** clean, **1** findings present, **2**
@@ -68,7 +71,7 @@ shape at config level.
 ```
 
 ```
-$ mcp-lint tests/fixtures/mc001_vulnerable.json
+$ mcp-cve-lint tests/fixtures/mc001_vulnerable.json
 tests/fixtures/mc001_vulnerable.json:4:6: MC001 MCP server 'inspector' exposes a
 network endpoint (http://0.0.0.0:6277/sse) on a non-loopback host (0.0.0.0) with
 no authentication header; this is the documented shape of CVE-2025-49596 ...
@@ -114,7 +117,7 @@ def build_server(user_config):
 ```
 
 ```
-$ mcp-lint tests/fixtures/mc002_vulnerable.py
+$ mcp-cve-lint tests/fixtures/mc002_vulnerable.py
 tests/fixtures/mc002_vulnerable.py:6:48: MC002 StdioServerParameters constructed
 with a non-literal `command` and no allowlist guard in scope; this is the
 documented shape of CVE-2026-30623 ...
