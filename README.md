@@ -1,10 +1,10 @@
 # mcp-lint
 
 [![CI](https://github.com/patchwright/mcp-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/patchwright/mcp-lint/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/mcp-cve-lint.svg)](https://pypi.org/project/mcp-cve-lint/)
 
 *Published on PyPI/CLI as **`mcp-cve-lint`** — the name `mcp-lint` was already
-taken by an unrelated package. The GitHub repo keeps its original name. (No
-PyPI badge yet — see RELEASING.md, publish is still pending.)*
+taken by an unrelated package. The GitHub repo keeps its original name.*
 
 A static linter for **MCP (Model Context Protocol) server configs and source**
 where every rule is pinned to a real, public MCP CVE or GHSA. Each finding
