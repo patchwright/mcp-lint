@@ -6,6 +6,8 @@
 *Published on PyPI/CLI as **`mcp-cve-lint`** — the name `mcp-lint` was already
 taken by an unrelated package. The GitHub repo keeps its original name.*
 
+*Part of [patchwright](https://github.com/patchwright/patchwright) — not affiliated with [Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright), an unrelated browser-automation project.*
+
 A static linter for **MCP (Model Context Protocol) server configs and source**
 where every rule is pinned to a real, public MCP CVE or GHSA. Each finding
 message carries the CVE id and an advisory URL so a reviewer can verify the
